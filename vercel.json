@@ -1,0 +1,15 @@
+{
+  "buildCommand": "next build",
+  "outputDirectory": ".next",
+  "env": {
+    "NEXT_PUBLIC_APP_NAME": "Hackathon Dashboard"
+  },
+  "routes": [
+    {
+      "src": "/dashboard.html",
+      "headers": {
+        "Cache-Control": "public, max-age=3600, immutable"
+      }
+    }
+  ]
+}

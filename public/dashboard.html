@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hackathon Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background-color: #0f1117;
+            color: #e6edf3;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #2a2f45;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        /* Buttons */
+        button {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background-color: #4f8ef7;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #3d7fe6;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background-color: #181c27;
+            color: #4f8ef7;
+            border: 1px solid #4f8ef7;
+        }
+
+        .btn-secondary:hover {
+            background-color: #2a2f45;
+        }
+
+        .btn-success {
+            background-color: #3dd68c;
+            color: #0f1117;
+        }
+
+        .btn-success:hover {
+            background-color: #2bc575;
+        }
+
+        .btn-danger {
+            background-color: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background-color: #181c27;
+            border: 1px solid #2a2f45;
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: #8b949e;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #4f8ef7;
+        }
+
+        /* Section */
+        .section {
+            background-color: #181c27;
+            border: 1px solid #2a2f45;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 6px;
+            transition: background-color 0.2s ease;
+        }
+
+        .section-header:hover {
+            background-color: #2a2f45;
+        }
+
+        .section-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            flex: 1;
+        }
+
+        .section-toggle {
+            font-size: 14px;
+            color: #4f8ef7;
+        }
+
+        .section-content {
+            display: none;
+        }
+
+        .section-content.active {
+            display: block;
+        }
+
+        /* Template Section */
+        .template-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .template-column {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .template-column label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #8b949e;
+            text-transform: uppercase;
+        }
+
+        textarea, input[type="text"] {
+            background-color: #0f1117;
+            border: 1px solid #2a2f45;
+            border-radius: 6px;
+            color: #e6edf3;
+            font-family: 'DM Sans', sans-serif;
+            padding: 12px;
+            font-size: 13px;
+            transition: border-color 0.2s ease;
+        }
+
+        textarea:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: #4f8ef7;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+            font-family: 'DM Mono', monospace;
+        }
+
+        .char-count {
+            font-size: 11px;
+            color: #8b949e;
+            text-align: right;
+        }
+
+        /* Import CSV */
+        .import-section {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        /* Search and Filter */
+        .search-filter {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        input[type="search"] {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        select {
+            background-color: #0f1117;
+            border: 1px solid #2a2f45;
+            border-radius: 6px;
+            color: #e6edf3;
+            padding: 10px 12px;
+            font-size: 13px;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #4f8ef7;
+        }
+
+        /* Table */
+        .table-wrapper {
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        table thead {
+            background-color: #0f1117;
+            border-bottom: 2px solid #2a2f45;
+        }
+
+        table th {
+            padding: 12px 10px;
+            text-align: left;
+            font-weight: 600;
+            color: #8b949e;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+        }
+
+        table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #2a2f45;
+        }
+
+        table tbody tr:hover {
+            background-color: #2a2f45;
+        }
+
+        .cell-mono {
+            font-family: 'DM Mono', monospace;
+            font-size: 12px;
+        }
+
+        /* Badge */
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .badge-complete {
+            background-color: rgba(61, 214, 140, 0.15);
+            color: #3dd68c;
+        }
+
+        .badge-incomplete {
+            background-color: rgba(249, 115, 22, 0.15);
+            color: #f97316;
+        }
+
+        .badge-sent {
+            background-color: rgba(61, 214, 140, 0.15);
+            color: #3dd68c;
+        }
+
+        .badge-pending {
+            background-color: rgba(249, 115, 22, 0.15);
+            color: #f97316;
+        }
+
+        .badge-leader {
+            background-color: rgba(79, 142, 247, 0.15);
+            color: #4f8ef7;
+        }
+
+        .badge-member {
+            background-color: rgba(61, 214, 140, 0.15);
+            color: #3dd68c;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .pagination button {
+            padding: 6px 10px;
+            font-size: 12px;
+            min-width: 32px;
+        }
+
+        .pagination .active {
+            background-color: #4f8ef7;
+            color: white;
+        }
+
+        .pagination .disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: #181c27;
+            border: 1px solid #2a2f45;
+            border-radius: 8px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+            color: #8b949e;
+            line-height: 1.5;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        /* Toast */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background-color: #181c27;
+            border: 1px solid #2a2f45;
+            border-radius: 6px;
+            padding: 16px 20px;
+            min-width: 300px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .toast.success {
+            border-color: #3dd68c;
+            border-left: 3px solid #3dd68c;
+        }
+
+        .toast.error {
+            border-color: #ef4444;
+            border-left: 3px solid #ef4444;
+        }
+
+        .toast.info {
+            border-color: #4f8ef7;
+            border-left: 3px solid #4f8ef7;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .template-columns {
+                grid-template-columns: 1fr;
+            }
+
+            .search-filter {
+                flex-direction: column;
+            }
+
+            input[type="search"] {
+                min-width: 100%;
+            }
+
+            .table-wrapper {
+                font-size: 12px;
+            }
+
+            table th, table td {
+                padding: 8px 5px;
+            }
+
+            .stats-bar {
+                grid-template-columns: 1fr;
+            }
+
+            .header-actions {
+                justify-content: center;
+                width: 100%;
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>🎯 Hackathon Dashboard</h1>
+            <div class="header-actions">
+                <button class="btn-primary" id="exportBtn">📥 Export Backup</button>
+                <button class="btn-primary" id="importBtn">📤 Import Backup</button>
+                <input type="file" id="fileInput" accept=".json">
+            </div>
+        </header>
+
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="stat-label">Total Contacts</div>
+                <div class="stat-value" id="totalContacts">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Complete / Incomplete</div>
+                <div class="stat-value"><span id="completeCount">0</span> / <span id="incompleteCount">0</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Emails Sent / Pending</div>
+                <div class="stat-value"><span id="emailSentCount">0</span> / <span id="emailPendingCount">0</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">WhatsApp Sent / Pending</div>
+                <div class="stat-value"><span id="waSentCount">0</span> / <span id="waPendingCount">0</span></div>
+            </div>
+        </div>
+
+        <!-- Templates Section -->
+        <div class="section">
+            <div class="section-header" onclick="toggleSection(this)">
+                <h2>📝 Message Templates</h2>
+                <span class="section-toggle">▼</span>
+            </div>
+            <div class="section-content active">
+                <div class="template-columns">
+                    <div class="template-column">
+                        <label>WhatsApp Message</label>
+                        <textarea id="waTemplate" placeholder="Use {name} as placeholder for contact name..."></textarea>
+                        <div class="char-count"><span id="waCharCount">0</span> / 1024 characters</div>
+                    </div>
+                    <div class="template-column">
+                        <label>Email Subject</label>
+                        <input type="text" id="emailSubject" placeholder="Use {name} as placeholder...">
+                        <label style="margin-top: 15px;">Email Body</label>
+                        <textarea id="emailBody" placeholder="Use {name} as placeholder for contact name..."></textarea>
+                        <div class="char-count"><span id="emailBodyCharCount">0</span> / 5000 characters</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CSV Import Section -->
+        <div class="section">
+            <div class="import-section">
+                <button class="btn-primary" onclick="document.getElementById('csvFile').click()">📤 Upload CSV</button>
+                <input type="file" id="csvFile" accept=".csv" style="display: none;">
+                <button class="btn-secondary" onclick="resetEmailStatus()">🔄 Reset Email Status</button>
+                <button class="btn-secondary" onclick="resetWAStatus()">🔄 Reset WhatsApp Status</button>
+                <button class="btn-danger" onclick="showDeleteModal()">🗑️ Delete All</button>
+            </div>
+        </div>
+
+        <!-- Search & Filter -->
+        <div class="section">
+            <div class="search-filter">
+                <input type="search" id="searchInput" placeholder="Search by name, email, team, or organisation...">
+                <select id="filterRegStatus">
+                    <option value="">All Reg Status</option>
+                    <option value="Complete">Complete</option>
+                    <option value="Incomplete">Incomplete</option>
+                </select>
+                <select id="filterEmailStatus">
+                    <option value="">All Email Status</option>
+                    <option value="sent">Sent</option>
+                    <option value="pending">Pending</option>
+                </select>
+                <select id="filterWAStatus">
+                    <option value="">All WA Status</option>
+                    <option value="sent">Sent</option>
+                    <option value="pending">Pending</option>
+                </select>
+                <button class="btn-success" onclick="sendBulkEmail()">📧 Send Bulk Email</button>
+            </div>
+
+            <!-- Contacts Table -->
+            <div class="table-wrapper">
+                <table id="contactsTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Team</th>
+                            <th>Role</th>
+                            <th>Email</th>
+                            <th>Mobile</th>
+                            <th>Organisation</th>
+                            <th>Reg Status</th>
+                            <th>WhatsApp</th>
+                            <th>Email</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination" id="pagination"></div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal" id="emailModal">
+        <div class="modal-content">
+            <div class="modal-header">Confirm Email Send</div>
+            <div class="modal-body">
+                Mark <strong id="emailCountModal">0</strong> emails as sent?
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeModal('emailModal')">Cancel</button>
+                <button class="btn-success" onclick="confirmEmailSent()">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="deleteModal">
+        <div class="modal-content">
+            <div class="modal-header">⚠️ Delete All Data</div>
+            <div class="modal-body">
+                This will permanently delete all contacts and templates. This action cannot be undone.
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeModal('deleteModal')">Cancel</button>
+                <button class="btn-danger" onclick="confirmDeleteAll()">Delete All</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        const STORAGE_KEY = 'hackathon_records';
+        const TEMPLATE_WA_KEY = 'hackathon_wa_template';
+        const TEMPLATE_EMAIL_SUBJECT_KEY = 'hackathon_email_subject';
+        const TEMPLATE_EMAIL_BODY_KEY = 'hackathon_email_body';
+
+        let currentPage = 1;
+        const rowsPerPage = 20;
+        let filteredContacts = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTemplates();
+            loadStats();
+            renderTable();
+            setupEventListeners();
+        });
+
+        // Event Listeners
+        function setupEventListeners() {
+            document.getElementById('csvFile').addEventListener('change', handleCSVUpload);
+            document.getElementById('waTemplate').addEventListener('input', saveTemplates);
+            document.getElementById('emailSubject').addEventListener('input', saveTemplates);
+            document.getElementById('emailBody').addEventListener('input', saveTemplates);
+            document.getElementById('searchInput').addEventListener('input', () => {
+                currentPage = 1;
+                renderTable();
+            });
+            document.getElementById('filterRegStatus').addEventListener('change', () => {
+                currentPage = 1;
+                renderTable();
+            });
+            document.getElementById('filterEmailStatus').addEventListener('change', () => {
+                currentPage = 1;
+                renderTable();
+            });
+            document.getElementById('filterWAStatus').addEventListener('change', () => {
+                currentPage = 1;
+                renderTable();
+            });
+            document.getElementById('exportBtn').addEventListener('click', exportBackup);
+            document.getElementById('importBtn').addEventListener('click', () => {
+                document.getElementById('fileInput').click();
+            });
+            document.getElementById('fileInput').addEventListener('change', handleJSONImport);
+
+            // Update character counts
+            document.getElementById('waTemplate').addEventListener('input', (e) => {
+                document.getElementById('waCharCount').textContent = e.target.value.length;
+            });
+            document.getElementById('emailBody').addEventListener('input', (e) => {
+                document.getElementById('emailBodyCharCount').textContent = e.target.value.length;
+            });
+        }
+
+        // Load Templates
+        function loadTemplates() {
+            document.getElementById('waTemplate').value = localStorage.getItem(TEMPLATE_WA_KEY) || '';
+            document.getElementById('emailSubject').value = localStorage.getItem(TEMPLATE_EMAIL_SUBJECT_KEY) || '';
+            document.getElementById('emailBody').value = localStorage.getItem(TEMPLATE_EMAIL_BODY_KEY) || '';
+            document.getElementById('waCharCount').textContent = document.getElementById('waTemplate').value.length;
+            document.getElementById('emailBodyCharCount').textContent = document.getElementById('emailBody').value.length;
+        }
+
+        // Save Templates
+        function saveTemplates() {
+            localStorage.setItem(TEMPLATE_WA_KEY, document.getElementById('waTemplate').value);
+            localStorage.setItem(TEMPLATE_EMAIL_SUBJECT_KEY, document.getElementById('emailSubject').value);
+            localStorage.setItem(TEMPLATE_EMAIL_BODY_KEY, document.getElementById('emailBody').value);
+        }
+
+        // Get Contacts
+        function getContacts() {
+            const data = localStorage.getItem(STORAGE_KEY);
+            return data ? JSON.parse(data) : [];
+        }
+
+        // Save Contacts
+        function saveContacts(contacts) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(contacts));
+            loadStats();
+            renderTable();
+        }
+
+        // Handle CSV Upload
+        function handleCSVUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            Papa.parse(file, {
+                complete: (results) => {
+                    const contacts = getContacts();
+                    const existingEmails = new Set(contacts.map(c => c._id));
+                    let added = 0;
+                    let duplicates = 0;
+
+                    const headers = results.data[0];
+                    const requiredColumns = [
+                        'Team ID', 'Team Name', "Candidate's Name", "Candidate's Email",
+                        "Candidate's Mobile", "Candidate's Gender", "Candidate's Location",
+                        'User type', 'Domain', 'Course', 'Specialization', 'Course Type',
+                        'Course Duration', 'Class/Grade', 'Year of Graduation',
+                        "Candidate's Organisation", 'Registration Time', 'Differently Abled',
+                        'Work Experience', 'Reg. Status', 'Ref Code', 'Resume'
+                    ];
+
+                    for (let i = 1; i < results.data.length; i++) {
+                        const row = results.data[i];
+                        if (!row[headers.indexOf("Candidate's Email")]) continue;
+
+                        const contactData = {};
+                        headers.forEach((header, idx) => {
+                            contactData[header] = row[idx] || '';
+                        });
+
+                        const email = contactData["Candidate's Email"];
+                        if (existingEmails.has(email)) {
+                            duplicates++;
+                        } else {
+                            const contact = {
+                                _id: email,
+                                ...contactData,
+                                email_sent: false,
+                                wa_sent: false,
+                                imported_at: Date.now()
+                            };
+                            contacts.push(contact);
+                            existingEmails.add(email);
+                            added++;
+                        }
+                    }
+
+                    saveContacts(contacts);
+                    showToast(`success`, `✅ ${added} new contacts added, ${duplicates} duplicates skipped`);
+                    document.getElementById('csvFile').value = '';
+                },
+                error: (error) => {
+                    showToast('error', `❌ CSV parse error: ${error.message}`);
+                }
+            });
+        }
+
+        // Load Stats
+        function loadStats() {
+            const contacts = getContacts();
+            const total = contacts.length;
+            const complete = contacts.filter(c => c['Reg. Status'] === 'Complete').length;
+            const incomplete = total - complete;
+            const emailSent = contacts.filter(c => c.email_sent).length;
+            const emailPending = total - emailSent;
+            const waSent = contacts.filter(c => c.wa_sent).length;
+            const waPending = total - waSent;
+
+            document.getElementById('totalContacts').textContent = total;
+            document.getElementById('completeCount').textContent = complete;
+            document.getElementById('incompleteCount').textContent = incomplete;
+            document.getElementById('emailSentCount').textContent = emailSent;
+            document.getElementById('emailPendingCount').textContent = emailPending;
+            document.getElementById('waSentCount').textContent = waSent;
+            document.getElementById('waPendingCount').textContent = waPending;
+        }
+
+        // Render Table
+        function renderTable() {
+            const contacts = getContacts();
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const regFilter = document.getElementById('filterRegStatus').value;
+            const emailFilter = document.getElementById('filterEmailStatus').value;
+            const waFilter = document.getElementById('filterWAStatus').value;
+
+            filteredContacts = contacts.filter(c => {
+                const name = (c["Candidate's Name"] || '').toLowerCase();
+                const email = (c["Candidate's Email"] || '').toLowerCase();
+                const team = (c['Team Name'] || '').toLowerCase();
+                const org = (c["Candidate's Organisation"] || '').toLowerCase();
+
+                const searchMatch = !search || name.includes(search) || email.includes(search) || 
+                                   team.includes(search) || org.includes(search);
+                const regMatch = !regFilter || c['Reg. Status'] === regFilter;
+                const emailMatch = !emailFilter || 
+                                   (emailFilter === 'sent' && c.email_sent) || 
+                                   (emailFilter === 'pending' && !c.email_sent);
+                const waMatch = !waFilter || 
+                               (waFilter === 'sent' && c.wa_sent) || 
+                               (waFilter === 'pending' && !c.wa_sent);
+
+                return searchMatch && regMatch && emailMatch && waMatch;
+            });
+
+            const start = (currentPage - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+            const pageContacts = filteredContacts.slice(start, end);
+
+            const tbody = document.querySelector('#contactsTable tbody');
+            tbody.innerHTML = '';
+
+            pageContacts.forEach((contact, idx) => {
+                const row = tbody.insertRow();
+                const number = start + idx + 1;
+
+                const userType = contact['User type'];
+                const userBadge = userType === 'Team Leader' ? 
+                    `<span class="badge badge-leader">${userType}</span>` :
+                    `<span class="badge badge-member">${userType}</span>`;
+
+                const regStatus = contact['Reg. Status'] || 'Unknown';
+                const regBadge = regStatus === 'Complete' ?
+                    `<span class="badge badge-complete">${regStatus}</span>` :
+                    `<span class="badge badge-incomplete">${regStatus}</span>`;
+
+                const emailBadge = contact.email_sent ?
+                    `<span class="badge badge-sent">✓ Sent</span>` :
+                    `<span class="badge badge-pending">Pending</span>`;
+
+                row.innerHTML = `
+                    <td>${number}</td>
+                    <td>${contact["Candidate's Name"] || ''}</td>
+                    <td>${contact['Team Name'] || ''}</td>
+                    <td>${userBadge}</td>
+                    <td class="cell-mono">${contact["Candidate's Email"] || ''}</td>
+                    <td class="cell-mono">${contact["Candidate's Mobile"] || ''}</td>
+                    <td>${contact["Candidate's Organisation"] || ''}</td>
+                    <td>${regBadge}</td>
+                    <td>
+                        <button class="btn-secondary btn-small" onclick="sendWhatsApp('${contact["Candidate's Email"]}')">
+                            ${contact.wa_sent ? '✓ Sent' : 'Send WA'}
+                        </button>
+                    </td>
+                    <td>${emailBadge}</td>
+                `;
+            });
+
+            renderPagination();
+        }
+
+        // Render Pagination
+        function renderPagination() {
+            const totalPages = Math.ceil(filteredContacts.length / rowsPerPage);
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+
+            if (totalPages <= 1) return;
+
+            // Previous button
+            const prevBtn = document.createElement('button');
+            prevBtn.textContent = '← Prev';
+            prevBtn.className = 'btn-secondary btn-small';
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.onclick = () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderTable();
+                }
+            };
+            pagination.appendChild(prevBtn);
+
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                    const pageBtn = document.createElement('button');
+                    pageBtn.textContent = i;
+                    pageBtn.className = currentPage === i ? 'btn-primary active btn-small' : 'btn-secondary btn-small';
+                    pageBtn.onclick = () => {
+                        currentPage = i;
+                        renderTable();
+                    };
+                    pagination.appendChild(pageBtn);
+                } else if (i === currentPage - 2 || i === currentPage + 2) {
+                    const dots = document.createElement('span');
+                    dots.textContent = '...';
+                    dots.style.padding = '6px 5px';
+                    pagination.appendChild(dots);
+                }
+            }
+
+            // Next button
+            const nextBtn = document.createElement('button');
+            nextBtn.textContent = 'Next →';
+            nextBtn.className = 'btn-secondary btn-small';
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.onclick = () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderTable();
+                }
+            };
+            pagination.appendChild(nextBtn);
+        }
+
+        // Send WhatsApp
+        function sendWhatsApp(email) {
+            const contacts = getContacts();
+            const contact = contacts.find(c => c._id === email);
+            if (!contact) return;
+
+            const mobile = contact["Candidate's Mobile"];
+            if (!mobile) {
+                showToast('error', '❌ No mobile number found');
+                return;
+            }
+
+            const template = document.getElementById('waTemplate').value;
+            const message = template.replace('{name}', contact["Candidate's Name"] || 'there');
+            const waLink = `https://wa.me/${mobile}?text=${encodeURIComponent(message)}`;
+
+            contact.wa_sent = true;
+            saveContacts(contacts);
+            window.open(waLink, '_blank');
+            showToast('success', '✅ WhatsApp link opened');
+        }
+
+        // Send Bulk Email
+        function sendBulkEmail() {
+            const contacts = getContacts();
+            const pendingEmails = contacts.filter(c => !c.email_sent);
+
+            if (pendingEmails.length === 0) {
+                showToast('info', 'ℹ️ No pending emails');
+                return;
+            }
+
+            const emails = pendingEmails.map(c => c["Candidate's Email"]).filter(e => e);
+            const subject = document.getElementById('emailSubject').value;
+            const body = document.getElementById('emailBody').value;
+
+            const bccList = emails.join(',');
+            const mailtoLink = `mailto:?bcc=${encodeURIComponent(bccList)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+            document.getElementById('emailCountModal').textContent = pendingEmails.length;
+            showModal('emailModal');
+
+            window.location.href = mailtoLink;
+        }
+
+        // Confirm Email Sent
+        function confirmEmailSent() {
+            const contacts = getContacts();
+            contacts.forEach(c => {
+                if (!c.email_sent) {
+                    c.email_sent = true;
+                }
+            });
+            saveContacts(contacts);
+            closeModal('emailModal');
+            showToast('success', '✅ All emails marked as sent');
+        }
+
+        // Reset Email Status
+        function resetEmailStatus() {
+            const contacts = getContacts();
+            contacts.forEach(c => c.email_sent = false);
+            saveContacts(contacts);
+            showToast('success', '🔄 Email status reset');
+        }
+
+        // Reset WA Status
+        function resetWAStatus() {
+            const contacts = getContacts();
+            contacts.forEach(c => c.wa_sent = false);
+            saveContacts(contacts);
+            showToast('success', '🔄 WhatsApp status reset');
+        }
+
+        // Export Backup
+        function exportBackup() {
+            const contacts = getContacts();
+            const waTemplate = localStorage.getItem(TEMPLATE_WA_KEY) || '';
+            const emailSubject = localStorage.getItem(TEMPLATE_EMAIL_SUBJECT_KEY) || '';
+            const emailBody = localStorage.getItem(TEMPLATE_EMAIL_BODY_KEY) || '';
+
+            const backup = {
+                exportedAt: new Date().toISOString(),
+                version: 1,
+                contacts: contacts,
+                templates: {
+                    waMessage: waTemplate,
+                    emailSubject: emailSubject,
+                    emailBody: emailBody
+                }
+            };
+
+            const filename = `hackathon-backup-${new Date().toISOString().split('T')[0]}.json`;
+            const dataStr = JSON.stringify(backup, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            link.click();
+
+            showToast('success', `✅ Backup exported as ${filename}`);
+        }
+
+        // Import Backup
+        function handleJSONImport(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const backup = JSON.parse(event.target.result);
+                    const contacts = getContacts();
+                    const existingEmails = new Set(contacts.map(c => c._id));
+                    let restored = 0;
+
+                    backup.contacts.forEach(contact => {
+                        if (!existingEmails.has(contact._id)) {
+                            contacts.push(contact);
+                            restored++;
+                        }
+                    });
+
+                    if (backup.templates) {
+                        if (backup.templates.waMessage) {
+                            localStorage.setItem(TEMPLATE_WA_KEY, backup.templates.waMessage);
+                        }
+                        if (backup.templates.emailSubject) {
+                            localStorage.setItem(TEMPLATE_EMAIL_SUBJECT_KEY, backup.templates.emailSubject);
+                        }
+                        if (backup.templates.emailBody) {
+                            localStorage.setItem(TEMPLATE_EMAIL_BODY_KEY, backup.templates.emailBody);
+                        }
+                    }
+
+                    saveContacts(contacts);
+                    loadTemplates();
+                    showToast('success', `✅ ${restored} contacts restored, templates loaded`);
+                    document.getElementById('fileInput').value = '';
+                } catch (error) {
+                    showToast('error', '❌ Invalid backup file');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Delete All
+        function showDeleteModal() {
+            showModal('deleteModal');
+        }
+
+        function confirmDeleteAll() {
+            localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem(TEMPLATE_WA_KEY);
+            localStorage.removeItem(TEMPLATE_EMAIL_SUBJECT_KEY);
+            localStorage.removeItem(TEMPLATE_EMAIL_BODY_KEY);
+            closeModal('deleteModal');
+            loadTemplates();
+            loadStats();
+            renderTable();
+            showToast('success', '🗑️ All data deleted');
+        }
+
+        // Modal Functions
+        function showModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Toast Functions
+        function showToast(type, message) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 4000);
+        }
+
+        // Toggle Section
+        function toggleSection(header) {
+            const content = header.nextElementSibling;
+            content.classList.toggle('active');
+            const toggle = header.querySelector('.section-toggle');
+            toggle.textContent = content.classList.contains('active') ? '▼' : '▶';
+        }
+
+        // Close modals when clicking outside
+        window.addEventListener('click', (e) => {
+            const emailModal = document.getElementById('emailModal');
+            const deleteModal = document.getElementById('deleteModal');
+            if (e.target === emailModal) closeModal('emailModal');
+            if (e.target === deleteModal) closeModal('deleteModal');
+        });
+    </script>
+</body>
+</html>
